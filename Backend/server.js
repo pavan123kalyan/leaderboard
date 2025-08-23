@@ -2,6 +2,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const path = require('path');
 require('dotenv').config(); // Load environment variables from .env file
 
 const app = express();
@@ -163,6 +164,14 @@ app.get('/api/debug', async (req, res) => {
     } catch (error) {
         res.status(500).json({ message: 'Server error', error });
     }
+});
+
+// Serve static files from the React app build directory
+app.use(express.static(path.join(__dirname, '../frontend/dist')));
+
+// Catch all handler: send back React's index.html file for any non-API routes
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../frontend/dist/index.html'));
 });
 
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
