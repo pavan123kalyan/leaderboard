@@ -2,8 +2,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const path = require('path');
-require('dotenv').config(); // Load environment variables from .env file
+require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -16,7 +15,6 @@ app.use(express.json());
 mongoose.connect(process.env.MONGO_URI)
     .then(() => {
         console.log('MongoDB connected successfully');
-        // Call the function to initialize the database after a successful connection
         initializeDatabase();
     })
     .catch(err => console.error('MongoDB connection error:', err));
@@ -30,7 +28,7 @@ const userSchema = new mongoose.Schema({
 });
 
 const historySchema = new mongoose.Schema({
-    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Using ObjectId to reference the user
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     awardedPoints: Number,
     timestamp: { type: Date, default: Date.now }
 });
@@ -38,7 +36,7 @@ const historySchema = new mongoose.Schema({
 const User = mongoose.model('User', userSchema);
 const History = mongoose.model('History', historySchema);
 
-// Initial User Data (Moved here for clarity)
+// Initial User Data
 const initialUsers = [
     { id: 1, name: 'Pavan', totalPoints: 950, profilePic: 'https://placehold.co/100x100/A088FF/FFFFFF?text=P' },
     { id: 2, name: 'Vardhan', totalPoints: 870, profilePic: 'https://placehold.co/100x100/50C878/FFFFFF?text=V' },
@@ -67,24 +65,21 @@ const initializeDatabase = async () => {
 };
 
 // API Endpoints
-// Claim points API
 app.post('/api/claim', async (req, res) => {
     try {
         const { userId } = req.body;
         const awardedPoints = Math.floor(Math.random() * 10) + 1;
 
-        // Find the user by their MongoDB _id
         const updatedUser = await User.findByIdAndUpdate(
             userId,
             { $inc: { totalPoints: awardedPoints } },
-            { new: true } // Return the updated document
+            { new: true }
         );
 
         if (!updatedUser) {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        // Create a history entry with the correct _id
         await History.create({ userId: updatedUser._id, awardedPoints });
 
         res.json({
@@ -98,7 +93,6 @@ app.post('/api/claim', async (req, res) => {
     }
 });
 
-// Get all users (for leaderboard)
 app.get('/api/users', async (req, res) => {
     try {
         const users = await User.find().sort({ totalPoints: -1 });
@@ -108,7 +102,6 @@ app.get('/api/users', async (req, res) => {
     }
 });
 
-// Get history
 app.get('/api/history', async (req, res) => {
     try {
         const history = await History.find().sort({ timestamp: -1 }).limit(10).populate('userId', 'name profilePic');
@@ -118,12 +111,10 @@ app.get('/api/history', async (req, res) => {
     }
 });
 
-// Add new user API
 app.post('/api/users', async (req, res) => {
     try {
         const { name, totalPoints, profilePic } = req.body;
         
-        // Create new user
         const newUser = new User({
             name,
             totalPoints: totalPoints || 0,
@@ -137,7 +128,6 @@ app.post('/api/users', async (req, res) => {
     }
 });
 
-// Reset database (for testing purposes)
 app.post('/api/reset', async (req, res) => {
     try {
         await User.deleteMany({});
@@ -149,7 +139,6 @@ app.post('/api/reset', async (req, res) => {
     }
 });
 
-// Debug endpoint to check database status
 app.get('/api/debug', async (req, res) => {
     try {
         const userCount = await User.countDocuments();
@@ -164,14 +153,6 @@ app.get('/api/debug', async (req, res) => {
     } catch (error) {
         res.status(500).json({ message: 'Server error', error });
     }
-});
-
-// Serve static files from the React app build directory
-app.use(express.static(path.join(__dirname, '../frontend/dist')));
-
-// Catch all handler: send back React's index.html file for any non-API routes
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../frontend/dist/index.html'));
 });
 
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

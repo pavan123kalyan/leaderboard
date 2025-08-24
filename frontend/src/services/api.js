@@ -1,6 +1,8 @@
 // src/services/api.js
 
-const BASE_URL = process.env.NODE_ENV === 'production' ? '/api' : 'http://localhost:5000/api';
+const BASE_URL = process.env.NODE_ENV === 'production' 
+  ? `${import.meta.env.VITE_BACKEND_URL}/api` 
+  : 'http://localhost:5000/api';
 
 export async function claimPoints(userId) {
   // Make a POST request to your backend's claim endpoint
