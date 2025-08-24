@@ -1,7 +1,7 @@
 // src/services/api.js
 
 const BASE_URL = process.env.NODE_ENV === 'production' 
-  ? `${import.meta.env.VITE_BACKEND_URL}/api` 
+  ? 'https://3w-business-backend.onrender.com/api' 
   : 'http://localhost:5000/api';
 
 export async function claimPoints(userId) {
